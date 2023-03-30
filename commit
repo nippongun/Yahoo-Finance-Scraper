@@ -1,0 +1,12 @@
+Initialize the repo
+
+The following functions are already implemented:
+
+(1) Poll the html for a specific ticker
+    (1.1) Parse for the table
+    (1.2) Export as csv
+
+(2) Test cases
+
+(3) Command line arguments 
+    
