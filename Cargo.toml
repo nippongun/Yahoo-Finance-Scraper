@@ -1,5 +1,5 @@
 [package]
-name = "Yahoo-Finance-Scraper"
+name = "yahoo_finance_scraper"
 version = "0.1.0"
 edition = "2021"
 

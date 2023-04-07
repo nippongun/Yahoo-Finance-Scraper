@@ -1,4 +1,4 @@
-use crate::modules::{balancesheet::parse_balance_sheet, common::parse_table_header};
+use crate::modules::{common::parse_table_header, parser::parse_table};
 
 #[test]
 fn test_parse_table_header() {
@@ -73,5 +73,5 @@ fn test_parse_balance_sheet() {
         ),
     ];
 
-    assert_eq!(parse_balance_sheet(html).unwrap(), expected);
+    assert_eq!(parse_table(html).unwrap(), expected);
 }
