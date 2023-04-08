@@ -6,7 +6,7 @@ This scraper will be kept simple because simplicitiy is cool. 😎
 
 ### Planned Features 📓
 - [x] Full JSON support
-- [x] Fetch finacials and cash flow.
+- [x] Fetch financials and cash flow.
 - [x] Extensive command line arguments 
 - [ ] Fetch current market price
 - [ ] Stock information
