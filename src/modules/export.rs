@@ -15,7 +15,7 @@ pub fn write_csv(filename: &str, data: Vec<(String, Vec<String>)>) -> Result<(),
 
     // Write header row TODO: get header from html with function
     // let header_row = vec!["Item", "Year 1", "Year 2", "Year 3", "Year 4"];
-    //writer.write_record(&header_row)?;
+    // writer.write_record(&header_row)?;
 
     // Write data rows
     for (string_value, vec_value) in data {

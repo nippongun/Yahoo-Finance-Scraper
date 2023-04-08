@@ -6,17 +6,17 @@ pub fn parse_table(html: &str) -> Result<Vec<(String, Vec<String>)>, Box<dyn Err
     let table_selector = Selector::parse("div.D\\(itb\\)").unwrap();
     let row_selector = Selector::parse("div.D\\(tbr\\)").unwrap();
     let cell_selector = Selector::parse("div.D\\(tbc\\)").unwrap();
-    let mut balance_sheet = Vec::new();
+    let mut data = Vec::new();
 
     if let Some(table) = document.select(&table_selector).next() {
         for row in table.select(&row_selector) {
             if let Some((name, value)) = parse_row(&row, &cell_selector) {
-                balance_sheet.push((name, value));
+                data.push((name, value));
             }
         }
     }
 
-    Ok(balance_sheet)
+    Ok(data)
 }
 
 fn parse_row(row: &scraper::ElementRef, cell_selector: &Selector) -> Option<(String, Vec<String>)> {
