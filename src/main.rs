@@ -2,6 +2,7 @@ mod modules;
 
 use clap::Parser;
 use modules::cli;
+use modules::common;
 use modules::export;
 use modules::parser;
 use reqwest::Client;
@@ -44,7 +45,10 @@ async fn export_data_for_category(
 
 async fn fetch_and_export_data(url: &str, filename: &str) -> Result<(), Box<dyn Error>> {
     let response = get_html(url).await?;
-    let data = parser::parse_table(&response)?;
+    let header = common::parse_table_header(&response)?;
+    let mut data = parser::parse_table(&response)?;
+
+    data.insert(0, header);
     export::write_csv(filename, data)?;
     Ok(())
 }
