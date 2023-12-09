@@ -1,4 +1,4 @@
-use crate::modules::{common::parse_table_header, parser::parse_table};
+use crate::modules::{parser::parse_table, parser::parse_table_header};
 
 #[test]
 fn test_parse_table_header() {
