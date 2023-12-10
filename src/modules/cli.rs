@@ -18,4 +18,8 @@ pub struct Value {
     /// Set to retrieve cash flow
     #[clap(short = 'c', long, action = ArgAction::SetTrue)]
     pub cashflow: Option<bool>,
+
+    /// Set to retrieve cash flow
+    #[clap(short = 's', long, action = ArgAction::SetTrue)]
+    pub stocksummary: Option<bool>,
 }

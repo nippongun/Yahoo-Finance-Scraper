@@ -68,3 +68,30 @@ pub fn parse_table_header(html: &str) -> Result<(String, Vec<String>), Box<dyn E
         )))
     }
 }
+
+pub fn parse_stock_summary(html: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let document = Html::parse_fragment(html);
+    let summary_table_selector = Selector::parse("#quote-summary").unwrap();
+    let summary_table = document.select(&summary_table_selector).next().unwrap();
+
+    let mut text_vec: Vec<String> = summary_table
+        .text()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .map(|s| s.to_string())
+        .collect();
+
+    for i in 0..text_vec.len() {
+        if text_vec[i] == "Earnings Date" && i + 3 < text_vec.len() {
+            let concatenated = format!(
+                "{} {} {}",
+                text_vec[i + 1],
+                text_vec[i + 2],
+                text_vec[i + 3]
+            );
+            text_vec.splice(i + 1..i + 4, vec![concatenated]);
+            break;
+        }
+    }
+    Ok(text_vec)
+}
