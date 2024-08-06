@@ -9,7 +9,7 @@ This scraper will be kept simple because simplicitiy is cool. 😎
 - [x] Fetch financials and cash flow.
 - [x] Extensive command line arguments 
 - [ ] Fetch current market price
-- [ ] Stock information
+- [x] Stock information
 
 ## Usage 🛠️
 
