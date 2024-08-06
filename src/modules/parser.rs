@@ -2,10 +2,10 @@ use scraper::{Html, Selector};
 use std::error::Error;
 
 pub fn parse_table(html: &str) -> Result<Vec<(String, Vec<String>)>, Box<dyn Error>> {
-    let document = Html::parse_document(html);
-    let table_selector = Selector::parse("div.D\\(itb\\)").unwrap();
-    let row_selector = Selector::parse("div.D\\(tbr\\)").unwrap();
-    let cell_selector = Selector::parse("div.D\\(tbc\\)").unwrap();
+    let document = Html::parse_fragment(html);
+    let table_selector = Selector::parse("div.tableBody").unwrap();
+    let row_selector = Selector::parse("div.row.lv-0").unwrap();
+    let cell_selector = Selector::parse("div.column").unwrap();
     let mut data = Vec::new();
 
     if let Some(table) = document.select(&table_selector).next() {
@@ -25,20 +25,16 @@ fn parse_row(row: &scraper::ElementRef, cell_selector: &Selector) -> Option<(Str
 
     let item_name = cells_iter
         .next()?
+        .select(&Selector::parse("div.rowTitle").unwrap())
+        .next()?
         .text()
         .collect::<String>()
         .trim()
         .to_string();
+
     let mut yoy_data: Vec<String> = Vec::with_capacity(cells.len() - 1);
-    for _ in 0..(cells.len() - 1) {
-        yoy_data.push(
-            cells_iter
-                .next()?
-                .text()
-                .collect::<String>()
-                .trim()
-                .to_string(),
-        );
+    for cell in cells_iter {
+        yoy_data.push(cell.text().collect::<String>().trim().to_string());
     }
 
     Some((item_name, yoy_data))
@@ -46,52 +42,62 @@ fn parse_row(row: &scraper::ElementRef, cell_selector: &Selector) -> Option<(Str
 
 pub fn parse_table_header(html: &str) -> Result<(String, Vec<String>), Box<dyn Error>> {
     let document = Html::parse_fragment(html);
-    let tbhg_selector = Selector::parse(".D\\(tbhg\\)").unwrap();
-    let tbhg = document.select(&tbhg_selector).next().unwrap();
+    let row_selector = Selector::parse("div.row.yf-1ezv2n5").unwrap();
+    let column_selector = Selector::parse("div.column.yf-1ezv2n5").unwrap();
 
-    let tbr_selector = Selector::parse(".D\\(tbr\\)").unwrap();
-    let tbr = tbhg.select(&tbr_selector).next().unwrap();
+    let row = document
+        .select(&row_selector)
+        .next()
+        .ok_or("Row not found")?;
 
-    let text_vec: Vec<String> = tbr
-        .text()
-        .collect::<Vec<_>>()
-        .into_iter()
-        .map(|s| s.to_string())
+    let mut elements: Vec<String> = row
+        .select(&column_selector)
+        .map(|element| element.text().collect::<String>().trim().to_string())
         .collect();
 
-    if let Some(first_element) = text_vec.first() {
-        Ok((first_element.clone(), text_vec[1..].to_vec()))
-    } else {
-        Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "No text found",
-        )))
+    if elements.is_empty() {
+        return Err("No elements found in the row".into());
     }
+
+    let breakdown = elements.remove(0);
+    if breakdown != "Breakdown" {
+        return Err("First element is not 'Breakdown'".into());
+    }
+
+    Ok((breakdown, elements))
 }
 
-pub fn parse_stock_summary(html: &str) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn parse_stock_summary(html: &str) -> Result<Vec<(String, String)>, Box<dyn Error>> {
     let document = Html::parse_fragment(html);
-    let summary_table_selector = Selector::parse("#quote-summary").unwrap();
-    let summary_table = document.select(&summary_table_selector).next().unwrap();
+    let li_selector = Selector::parse("li.yf-tx3nkj").unwrap();
+    let span_selector = Selector::parse("span").unwrap();
 
-    let mut text_vec: Vec<String> = summary_table
-        .text()
-        .collect::<Vec<_>>()
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect();
+    let mut result = Vec::new();
 
-    for i in 0..text_vec.len() {
-        if text_vec[i] == "Earnings Date" && i + 3 < text_vec.len() {
-            let concatenated = format!(
-                "{} {} {}",
-                text_vec[i + 1],
-                text_vec[i + 2],
-                text_vec[i + 3]
-            );
-            text_vec.splice(i + 1..i + 4, vec![concatenated]);
-            break;
+    for li in document.select(&li_selector) {
+        let mut spans = li.select(&span_selector);
+        if let (Some(label_span), Some(value_span)) = (spans.next(), spans.next()) {
+            let label = label_span.text().collect::<String>().trim().to_string();
+            let value = value_span
+                .text()
+                .collect::<String>()
+                .trim()
+                .replace('\u{a0}', " ")
+                .to_string();
+
+            // Special handling for 'Earnings Date'
+            if label == "Earnings Date" {
+                let date_range = value.split(" - ").collect::<Vec<_>>();
+                if date_range.len() == 2 {
+                    result.push((label, format!("{} - {}", date_range[0], date_range[1])));
+                } else {
+                    result.push((label, value));
+                }
+            } else {
+                result.push((label, value));
+            }
         }
     }
-    Ok(text_vec)
+
+    Ok(result)
 }
